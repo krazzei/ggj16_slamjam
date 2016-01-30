@@ -29,6 +29,7 @@ class Aggj16_slamjamCharacter : public APaperCharacter
 
 	UTextRenderComponent* TextComponent;
 	virtual void Tick(float DeltaSeconds) override;
+	
 protected:
 	// The animation to play while running around
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Animations)
@@ -42,14 +43,6 @@ protected:
 	void UpdateAnimation();
 
 	/** Called for side to side input */
-	void MoveRight();
-
-	void MoveUp();
-
-	void MoveDown();
-
-	void MoveLeft();
-
 	void UpdateCharacter();
 
 	/** Handle touch inputs. */
@@ -72,4 +65,15 @@ public:
 
 	bool bCanMove : 1;
 
+	UFUNCTION(BlueprintCallable, Category = Movement)
+	void MoveRight();
+	
+	UFUNCTION(BlueprintCallable, Category = Movement)
+	void MoveUp();
+	
+	UFUNCTION(BlueprintCallable, Category = Movement)
+	void MoveDown();
+	
+	UFUNCTION(BlueprintCallable, Category = Movement)
+	void MoveLeft();
 };
