@@ -3,6 +3,7 @@
 #pragma once
 
 #include "PaperCharacter.h"
+#include "ItemPickup.h"
 #include "ggj16_slamjamCharacter.generated.h"
 
 // This class is the default character for ggj16_slamjam, and it is responsible for all
@@ -15,13 +16,14 @@
 class UTextRenderComponent;
 
 UENUM(BlueprintType)
-enum class ECharMoveState
+enum class ECharMoveState : uint8
 {
 	Idle,
 	MoveRight,
 	MoveLeft,
 	MoveUp,
-	MoveDown
+	MoveDown,
+	Jump
 };
 
 UCLASS(config=Game)
@@ -53,13 +55,7 @@ protected:
 	void UpdateAnimation();
 
 	/** Called for side to side input */
-	void UpdateCharacter();
-
-	/** Handle touch inputs. */
-	void TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location);
-
-	/** Handle touch stop event. */
-	void TouchStopped(const ETouchIndex::Type FingerIndex, const FVector Location);
+	void UpdateCharacter(float DeltaSeconds);
 
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
@@ -73,14 +69,18 @@ public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
-	bool bCanMove : 1;
+	bool bCanMove;
 
-<<<<<<< HEAD
 	ECharMoveState moveState;
+	ECharMoveState prevMoveState;
 
+	UPROPERTY(EditAnywhere)
+	ECharMoveState facingDirection;
 
+	TArray<ECharMoveState> MoveList;
 
-=======
+	int32 MoveIndex = 0;
+
 	UFUNCTION(BlueprintCallable, Category = Movement)
 	void MoveRight();
 	
@@ -92,5 +92,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = Movement)
 	void MoveLeft();
->>>>>>> 95e95859978c24cd1fa3a2dc1673870eeb28d110
+
+	UFUNCTION(BlueprintCallable, Category = Movement)
+	void Pickup(AItemPickup* ItemPickup);
+
 };
