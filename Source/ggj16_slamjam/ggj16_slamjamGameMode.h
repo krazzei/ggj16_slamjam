@@ -19,4 +19,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<Aggj16_slamjamCharacter> CharacterPawnClass;
+	
+	void ResetLevel();
 };
