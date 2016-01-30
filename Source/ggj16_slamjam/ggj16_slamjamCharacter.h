@@ -42,7 +42,13 @@ protected:
 	void UpdateAnimation();
 
 	/** Called for side to side input */
-	void MoveRight(float Value);
+	void MoveRight();
+
+	void MoveUp();
+
+	void MoveDown();
+
+	void MoveLeft();
 
 	void UpdateCharacter();
 
@@ -63,4 +69,7 @@ public:
 	FORCEINLINE class UCameraComponent* GetSideViewCameraComponent() const { return SideViewCameraComponent; }
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+	bool bCanMove : 1;
+
 };

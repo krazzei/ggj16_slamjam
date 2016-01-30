@@ -18,9 +18,15 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	{
 		ConstructorHelpers::FObjectFinderOptional<UPaperFlipbook> RunningAnimationAsset;
 		ConstructorHelpers::FObjectFinderOptional<UPaperFlipbook> IdleAnimationAsset;
-		FConstructorStatics()
+		/*FConstructorStatics()
 			: RunningAnimationAsset(TEXT("/Game/2dSideScroller/Sprites/RunningAnimation.RunningAnimation"))
 			, IdleAnimationAsset(TEXT("/Game/2dSideScroller/Sprites/IdleAnimation.IdleAnimation"))
+		{
+		}*/
+
+		FConstructorStatics()
+			: RunningAnimationAsset(TEXT("/Game/Character/WalkingAnimation.WalkingAnimation"))
+			, IdleAnimationAsset(TEXT("/Game/Character/Idle.Idle"))
 		{
 		}
 	};
@@ -87,6 +93,8 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	// Enable replication on the Sprite component so animations show up when networked
 	GetSprite()->SetIsReplicated(true);
 	bReplicates = true;
+
+	bCanMove = true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -121,18 +129,50 @@ void Aggj16_slamjamCharacter::SetupPlayerInputComponent(class UInputComponent* I
 	// Note: the 'Jump' action and the 'MoveRight' axis are bound to actual keys/buttons/sticks in DefaultInput.ini (editable from Project Settings..Input)
 	InputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	InputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-	InputComponent->BindAxis("MoveRight", this, &Aggj16_slamjamCharacter::MoveRight);
+	InputComponent->BindAction("MoveRight", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveRight);
+	InputComponent->BindAction("MoveRight", IE_Repeat, this, &Aggj16_slamjamCharacter::MoveRight);
+	InputComponent->BindAction("MoveUp", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveUp);
+	InputComponent->BindAction("MoveRight", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveDown);
+	InputComponent->BindAction("MoveLeft", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveLeft);
+
 
 	InputComponent->BindTouch(IE_Pressed, this, &Aggj16_slamjamCharacter::TouchStarted);
 	InputComponent->BindTouch(IE_Released, this, &Aggj16_slamjamCharacter::TouchStopped);
 }
 
-void Aggj16_slamjamCharacter::MoveRight(float Value)
+void Aggj16_slamjamCharacter::MoveRight()
 {
 	/*UpdateChar();*/
 
 	// Apply the input to the character motion
-	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Value);
+	if (bCanMove)
+	{
+		AddMovementInput(FVector(1.0f, 0.0f, 0.0f), 20);
+	}
+}
+
+void Aggj16_slamjamCharacter::MoveUp()
+{
+	if (bCanMove)
+	{
+		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), 3);
+	}
+}
+
+void Aggj16_slamjamCharacter::MoveDown()
+{
+	if (bCanMove)
+	{
+		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), -3);
+	}
+}
+
+void Aggj16_slamjamCharacter::MoveLeft()
+{
+	if (bCanMove)
+	{
+		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), -3);
+	}
 }
 
 void Aggj16_slamjamCharacter::TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location)
@@ -153,17 +193,18 @@ void Aggj16_slamjamCharacter::UpdateCharacter()
 
 	// Now setup the rotation of the controller based on the direction we are travelling
 	const FVector PlayerVelocity = GetVelocity();	
-	float TravelDirection = PlayerVelocity.X;
+	float TravelDirectionX = PlayerVelocity.X;
+	float TravelDirectionZ = PlayerVelocity.Z;
 	// Set the rotation so that the character faces his direction of travel.
 	if (Controller != nullptr)
 	{
-		if (TravelDirection < 0.0f)
+		if (TravelDirectionX < 0.0f)
 		{
-			Controller->SetControlRotation(FRotator(0.0, 180.0f, 0.0f));
+			Controller->SetControlRotation(FRotator(0.0, 0.0f, 90.0f));
 		}
-		else if (TravelDirection > 0.0f)
+		else if (TravelDirectionX > 0.0f)
 		{
-			Controller->SetControlRotation(FRotator(0.0f, 0.0f, 0.0f));
+			Controller->SetControlRotation(FRotator(0.0f, 0.0f, -90.0f));
 		}
 	}
 }
