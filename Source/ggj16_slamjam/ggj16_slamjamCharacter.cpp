@@ -95,6 +95,8 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	bReplicates = true;
 
 	bCanMove = true;
+	moveState = ECharMoveState::Idle;
+	prevMoveState = ECharMoveState::Idle;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -107,6 +109,33 @@ void Aggj16_slamjamCharacter::UpdateAnimation()
 
 	// Are we moving or standing still?
 	UPaperFlipbook* DesiredAnimation = (PlayerSpeed > 0.0f) ? RunningAnimation : IdleAnimation;
+
+	if (MoveList.Num() <= 0)
+	{
+		DesiredAnimation = IdleAnimation;
+	}
+	else
+	{
+
+		switch (MoveList[MoveIndex])
+		{
+		case ECharMoveState::Idle:
+			DesiredAnimation = IdleAnimation;
+			break;
+		case ECharMoveState::MoveDown:
+		case ECharMoveState::MoveLeft:
+		case ECharMoveState::MoveRight:
+		case ECharMoveState::MoveUp:
+			DesiredAnimation = RunningAnimation;
+			break;
+		case ECharMoveState::Jump:
+
+			break;
+		default:
+			break;
+		}
+	}
+
 	if( GetSprite()->GetFlipbook() != DesiredAnimation 	)
 	{
 		GetSprite()->SetFlipbook(DesiredAnimation);
@@ -117,7 +146,7 @@ void Aggj16_slamjamCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	UpdateCharacter();	
+	UpdateCharacter(DeltaSeconds);	
 }
 
 
@@ -127,18 +156,24 @@ void Aggj16_slamjamCharacter::Tick(float DeltaSeconds)
 void Aggj16_slamjamCharacter::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 {
 	// Note: the 'Jump' action and the 'MoveRight' axis are bound to actual keys/buttons/sticks in DefaultInput.ini (editable from Project Settings..Input)
-	InputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	InputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-	InputComponent->BindAction("MoveRight", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveRight);
-	InputComponent->BindAction("MoveRight", IE_Repeat, this, &Aggj16_slamjamCharacter::MoveRight);
-	InputComponent->BindAction("MoveUp", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveUp);
-	InputComponent->BindAction("MoveRight", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveDown);
-	InputComponent->BindAction("MoveLeft", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveLeft);
+	//InputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	//InputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	//InputComponent->BindAction("MoveRight", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveRight);
+	//InputComponent->BindAction("MoveUp", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveUp);
+	//InputComponent->BindAction("MoveDown", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveDown);
+	//InputComponent->BindAction("MoveLeft", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveLeft);
 
-
-	InputComponent->BindTouch(IE_Pressed, this, &Aggj16_slamjamCharacter::TouchStarted);
-	InputComponent->BindTouch(IE_Released, this, &Aggj16_slamjamCharacter::TouchStopped);
+	//InputComponent->BindTouch(IE_Pressed, this, &Aggj16_slamjamCharacter::TouchStarted);
+	//InputComponent->BindTouch(IE_Released, this, &Aggj16_slamjamCharacter::TouchStopped);
 }
+
+//void Aggj16_slamjamCharacter::MoveRight(float Value)
+//{
+//	if (bCanMove)
+//	{
+//		AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Value);
+//	}
+//}
 
 void Aggj16_slamjamCharacter::MoveRight()
 {
@@ -147,7 +182,9 @@ void Aggj16_slamjamCharacter::MoveRight()
 	// Apply the input to the character motion
 	if (bCanMove)
 	{
-		AddMovementInput(FVector(1.0f, 0.0f, 0.0f), 20);
+		prevMoveState = moveState;
+		moveState = ECharMoveState::MoveRight;
+		facingDirection = ECharMoveState::MoveRight;
 	}
 }
 
@@ -155,7 +192,9 @@ void Aggj16_slamjamCharacter::MoveUp()
 {
 	if (bCanMove)
 	{
-		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), 3);
+		prevMoveState = moveState;
+		moveState = ECharMoveState::MoveUp;
+		facingDirection = ECharMoveState::MoveUp;
 	}
 }
 
@@ -163,7 +202,9 @@ void Aggj16_slamjamCharacter::MoveDown()
 {
 	if (bCanMove)
 	{
-		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), -3);
+		prevMoveState = moveState;
+		moveState = ECharMoveState::MoveDown;
+		facingDirection = ECharMoveState::MoveDown;
 	}
 }
 
@@ -171,40 +212,59 @@ void Aggj16_slamjamCharacter::MoveLeft()
 {
 	if (bCanMove)
 	{
-		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), -3);
+		prevMoveState = moveState;
+		moveState = ECharMoveState::MoveLeft;
+		facingDirection = ECharMoveState::MoveLeft;
 	}
 }
 
-void Aggj16_slamjamCharacter::TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location)
+void Aggj16_slamjamCharacter::Pickup(AItemPickup* ItemPickup)
 {
-	// jump on any touch
-	Jump();
+	switch (ItemPickup->ItemType)
+	{
+		case EItemType::Jump:
+			MoveList.Add(ECharMoveState::Jump);
+		break;
+	default:
+		break;
+	}
 }
 
-void Aggj16_slamjamCharacter::TouchStopped(const ETouchIndex::Type FingerIndex, const FVector Location)
-{
-	StopJumping();
-}
-
-void Aggj16_slamjamCharacter::UpdateCharacter()
+void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 {
 	// Update animation to match the motion
 	UpdateAnimation();
 
-	// Now setup the rotation of the controller based on the direction we are travelling
-	const FVector PlayerVelocity = GetVelocity();	
-	float TravelDirectionX = PlayerVelocity.X;
-	float TravelDirectionZ = PlayerVelocity.Z;
 	// Set the rotation so that the character faces his direction of travel.
 	if (Controller != nullptr)
 	{
-		if (TravelDirectionX < 0.0f)
+//		FVector FMath::Lerp(GetTransform().GetLocation(), GetTransform().GetLocation() + FVector(10.0f, 0.0f, 0.0f), )
+//		FRotator DesiredRotation;  // Controller->GetControlRotation();
+
+		if (facingDirection == ECharMoveState::MoveDown)
 		{
-			Controller->SetControlRotation(FRotator(0.0, 0.0f, 90.0f));
+			Controller->SetControlRotation(FRotator(0.0f, 180.0f, 0.0f));
 		}
-		else if (TravelDirectionX > 0.0f)
+		else if (facingDirection == ECharMoveState::MoveLeft)
 		{
 			Controller->SetControlRotation(FRotator(0.0f, 0.0f, -90.0f));
 		}
+		else if (facingDirection == ECharMoveState::MoveRight)
+		{
+			Controller->SetControlRotation(FRotator(0.0f, 0.0f, 90.0f));
+		}
+		else if (facingDirection == ECharMoveState::MoveUp)
+		{
+			Controller->SetControlRotation(FRotator(0.0f, 0.0f, 0.0f));
+		}
+
+		/*if (TravelDirectionX < 0.0f)
+		{
+			Controller->SetControlRotation(FRotator(0.0f, 180.0f, 180.0f));
+		}
+		else if (TravelDirectionX > 0.0f)
+		{
+			Controller->SetControlRotation(FRotator(90.0f, 180.0f, 90.0f));
+		}*/
 	}
 }
