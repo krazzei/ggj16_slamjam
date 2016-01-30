@@ -14,6 +14,16 @@
 
 class UTextRenderComponent;
 
+UENUM(BlueprintType)
+enum class ECharMoveState
+{
+	Idle,
+	MoveRight,
+	MoveLeft,
+	MoveUp,
+	MoveDown
+};
+
 UCLASS(config=Game)
 class Aggj16_slamjamCharacter : public APaperCharacter
 {
@@ -71,5 +81,9 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
 	bool bCanMove : 1;
+
+	ECharMoveState moveState;
+
+
 
 };

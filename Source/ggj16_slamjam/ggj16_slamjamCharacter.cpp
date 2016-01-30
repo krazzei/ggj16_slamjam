@@ -95,6 +95,7 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	bReplicates = true;
 
 	bCanMove = true;
+	moveState = ECharMoveState::Idle;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -129,16 +130,23 @@ void Aggj16_slamjamCharacter::SetupPlayerInputComponent(class UInputComponent* I
 	// Note: the 'Jump' action and the 'MoveRight' axis are bound to actual keys/buttons/sticks in DefaultInput.ini (editable from Project Settings..Input)
 	InputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	InputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	//InputComponent->BindAxis("MoveRight", this, &Aggj16_slamjamCharacter::MoveRight);
 	InputComponent->BindAction("MoveRight", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveRight);
-	InputComponent->BindAction("MoveRight", IE_Repeat, this, &Aggj16_slamjamCharacter::MoveRight);
 	InputComponent->BindAction("MoveUp", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveUp);
 	InputComponent->BindAction("MoveRight", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveDown);
 	InputComponent->BindAction("MoveLeft", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveLeft);
 
-
 	InputComponent->BindTouch(IE_Pressed, this, &Aggj16_slamjamCharacter::TouchStarted);
 	InputComponent->BindTouch(IE_Released, this, &Aggj16_slamjamCharacter::TouchStopped);
 }
+
+//void Aggj16_slamjamCharacter::MoveRight(float Value)
+//{
+//	if (bCanMove)
+//	{
+//		AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Value);
+//	}
+//}
 
 void Aggj16_slamjamCharacter::MoveRight()
 {
@@ -155,7 +163,8 @@ void Aggj16_slamjamCharacter::MoveUp()
 {
 	if (bCanMove)
 	{
-		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), 3);
+		moveState = ECharMoveState::MoveUp;
+		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), 20);
 	}
 }
 
@@ -163,7 +172,7 @@ void Aggj16_slamjamCharacter::MoveDown()
 {
 	if (bCanMove)
 	{
-		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), -3);
+		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), -20);
 	}
 }
 
@@ -171,7 +180,7 @@ void Aggj16_slamjamCharacter::MoveLeft()
 {
 	if (bCanMove)
 	{
-		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), -3);
+		AddMovementInput(FVector(0.0f, 0.0f, 1.0f), -20);
 	}
 }
 
@@ -200,11 +209,11 @@ void Aggj16_slamjamCharacter::UpdateCharacter()
 	{
 		if (TravelDirectionX < 0.0f)
 		{
-			Controller->SetControlRotation(FRotator(0.0, 0.0f, 90.0f));
+			Controller->SetControlRotation(FRotator(0.0f, 180.0f, 180.0f));
 		}
 		else if (TravelDirectionX > 0.0f)
 		{
-			Controller->SetControlRotation(FRotator(0.0f, 0.0f, -90.0f));
+			Controller->SetControlRotation(FRotator(90.0f, 180.0f, 90.0f));
 		}
 	}
 }
