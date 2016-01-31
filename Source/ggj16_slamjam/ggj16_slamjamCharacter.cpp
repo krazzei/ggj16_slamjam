@@ -99,6 +99,7 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	bStopMoving = true;
 	moveState = ECharMoveState::Idle;
 	prevMoveState = ECharMoveState::Idle;
+	moveDistance = 100;
 
 }
 
@@ -106,14 +107,14 @@ void Aggj16_slamjamCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FVector actorPos = GetActorLocation();
-	float xPos = actorPos.X;
-	float yPos = actorPos.Y;
+	//FVector actorPos = GetActorLocation();
+	//float xPos = actorPos.X;
+	//float yPos = actorPos.Y;
 
-	xPos = FMath::RoundToFloat(actorPos.X / 50) * 100;
-	yPos = FMath::RoundToFloat(actorPos.Y / 50) * 100;
+	//xPos = FMath::RoundToFloat(actorPos.X / 50) * 100;
+	//yPos = FMath::RoundToFloat(actorPos.Y / 50) * 100;
 
-	SetActorLocation(FVector(xPos, yPos, 10.0f));
+	//SetActorLocation(FVector(xPos, yPos, 10.0f));
 
 }
 
@@ -187,7 +188,7 @@ void Aggj16_slamjamCharacter::MoveRight()
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveRight;
 		facingDirection = ECharMoveState::MoveRight;
-		moveTarget = GetActorLocation() + FVector(1.0, 0.0, 0.0) * 50;
+		moveTarget = GetActorLocation() + FVector(1.0, 0.0, 0.0) * moveDistance;
 		bStopMoving = false;
 	}
 }

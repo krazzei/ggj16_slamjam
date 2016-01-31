@@ -75,6 +75,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	ECharMoveState facingDirection;
 
+	float moveDistance;
+
 	TArray<ECharMoveState> MoveList;
 	
 	FActionQueue MoveQueue;
