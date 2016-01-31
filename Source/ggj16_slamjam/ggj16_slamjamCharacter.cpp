@@ -263,15 +263,15 @@ void Aggj16_slamjamCharacter::Roll()
 
 void Aggj16_slamjamCharacter::SideStepLeft()
 {
-	FVector moveDir = GetMoveDirection();
-	SetMoveTarget(GetActorLocation() + moveDir * moveDistance * 2);
+	FVector moveDir = GetActorForwardVector();
+	SetMoveTarget(GetActorLocation() + moveDir * moveDistance);
 	speed = sidestepSpeed;
 }
 
 void Aggj16_slamjamCharacter::SideStepRight()
 {
-	FVector moveDir = GetMoveDirection();
-	SetMoveTarget(GetActorLocation() + moveDir * moveDistance * 2);
+	FVector moveDir = GetActorForwardVector() * -1;
+	SetMoveTarget(GetActorLocation() + moveDir * moveDistance);
 	speed = sidestepSpeed;
 }
 
