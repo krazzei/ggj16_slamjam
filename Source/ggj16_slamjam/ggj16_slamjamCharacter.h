@@ -81,8 +81,22 @@ public:
 	UPROPERTY(EditAnywhere)
 	ECharMoveState facingDirection;
 
-	UPROPERTY(EditDefaultsOnly)
+	float speed;
+
+	UPROPERTY(EditDefaultsOnly, Category = Movement)
 	float moveDistance;
+
+	UPROPERTY(EditDefaultsOnly, Category = Movement)
+	float moveSpeed;
+
+	UPROPERTY(EditDefaultsOnly, Category = Movement)
+	float jumpSpeed;
+
+	UPROPERTY(EditDefaultsOnly, Category = Movement)
+	float sidestepSpeed;
+
+	UPROPERTY(EditDefaultsOnly, Category = Movement)
+	float rollSpeed;
 
 	TArray<ECharMoveState> MoveList;
 	

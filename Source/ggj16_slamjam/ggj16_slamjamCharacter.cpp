@@ -198,6 +198,7 @@ void Aggj16_slamjamCharacter::MoveRight()
 		moveTarget = GetActorLocation() + FVector(1.0, 0.0, 0.0) * moveDistance;
 		bStopMoving = false;
 		bCanMove = false;
+		speed = moveSpeed;
 	}
 }
 
@@ -211,6 +212,7 @@ void Aggj16_slamjamCharacter::MoveUp()
 		moveTarget = GetActorLocation() + FVector(0.0, -1.0, 0.0) * moveDistance;
 		bStopMoving = false;
 		bCanMove = false;
+		speed = moveSpeed;
 	}
 }
 
@@ -224,6 +226,7 @@ void Aggj16_slamjamCharacter::MoveDown()
 		moveTarget = GetActorLocation() + FVector(0.0, 1.0, 0.0) * moveDistance;
 		bStopMoving = false;
 		bCanMove = false;
+		speed = moveSpeed;
 	}
 }
 
@@ -237,6 +240,7 @@ void Aggj16_slamjamCharacter::MoveLeft()
 		moveTarget = GetActorLocation() + FVector(-1.0, 0.0, 0.0) * moveDistance;
 		bStopMoving = false;
 		bCanMove = false;
+		speed = moveSpeed;
 	}
 }
 
@@ -244,24 +248,28 @@ void Aggj16_slamjamCharacter::Jump()
 {
 	FVector moveDir = GetMoveDirection();
 	moveTarget = moveDir * moveDistance * 2;
+	speed = jumpSpeed;
 }
 
 void Aggj16_slamjamCharacter::Roll()
 {
 	FVector moveDir = GetMoveDirection();
 	moveTarget = moveDir * moveDistance * 2;
+	speed = rollSpeed;
 }
 
 void Aggj16_slamjamCharacter::SideStepLeft()
 {
 	FVector moveDir = GetMoveDirection();
 	moveTarget = moveDir * moveDistance * 2;
+	speed = sidestepSpeed;
 }
 
 void Aggj16_slamjamCharacter::SideStepRight()
 {
 	FVector moveDir = GetMoveDirection();
 	moveTarget = moveDir * moveDistance * 2;
+	speed = sidestepSpeed;
 }
 
 FVector Aggj16_slamjamCharacter::GetMoveDirection()
@@ -399,7 +407,7 @@ void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 		}
 		else if(!bStopMoving)
 		{
-			FVector newPos = FMath::Lerp(GetActorLocation(), moveTarget, 0.5);
+			FVector newPos = FMath::Lerp(GetActorLocation(), moveTarget, DeltaSeconds * speed);
 			SetActorLocation(newPos);
 		}
 
