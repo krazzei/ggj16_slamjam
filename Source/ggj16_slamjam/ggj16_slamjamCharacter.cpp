@@ -99,7 +99,7 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	bStopMoving = true;
 	moveState = ECharMoveState::Idle;
 	prevMoveState = ECharMoveState::Idle;
-	moveDistance = 100;
+	moveDistance = 110;
 
 }
 
@@ -190,6 +190,7 @@ void Aggj16_slamjamCharacter::MoveRight()
 		facingDirection = ECharMoveState::MoveRight;
 		moveTarget = GetActorLocation() + FVector(1.0, 0.0, 0.0) * moveDistance;
 		bStopMoving = false;
+		bCanMove = false;
 	}
 }
 
@@ -200,8 +201,9 @@ void Aggj16_slamjamCharacter::MoveUp()
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveUp;
 		facingDirection = ECharMoveState::MoveUp;
-		moveTarget = GetActorLocation() + FVector(0.0, -1.0, 0.0) * 50;
+		moveTarget = GetActorLocation() + FVector(0.0, -1.0, 0.0) * moveDistance;
 		bStopMoving = false;
+		bCanMove = false;
 	}
 }
 
@@ -212,8 +214,9 @@ void Aggj16_slamjamCharacter::MoveDown()
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveDown;
 		facingDirection = ECharMoveState::MoveDown;
-		moveTarget = GetActorLocation() + FVector(0.0, 1.0, 0.0) * 50;
+		moveTarget = GetActorLocation() + FVector(0.0, 1.0, 0.0) * moveDistance;
 		bStopMoving = false;
+		bCanMove = false;
 	}
 }
 
@@ -224,10 +227,28 @@ void Aggj16_slamjamCharacter::MoveLeft()
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveLeft;
 		facingDirection = ECharMoveState::MoveLeft;
-		moveTarget = GetActorLocation() + FVector(-1.0, 0.0, 0.0) * 50;
+		moveTarget = GetActorLocation() + FVector(-1.0, 0.0, 0.0) * moveDistance;
 		bStopMoving = false;
+		bCanMove = false;
 	}
 }
+
+void Aggj16_slamjamCharacter::Jump()
+{
+	
+}
+
+void Aggj16_slamjamCharacter::Roll()
+{
+
+}
+
+void Aggj16_slamjamCharacter::SideStep()
+{
+
+}
+
+
 
 void Aggj16_slamjamCharacter::Pickup(AItemPickup* ItemPickup)
 {
@@ -290,7 +311,7 @@ void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 		}
 		else if(!bStopMoving)
 		{
-			FVector newPos = FMath::Lerp(GetActorLocation(), moveTarget, 0.15);
+			FVector newPos = FMath::Lerp(GetActorLocation(), moveTarget, 0.5);
 			SetActorLocation(newPos);
 		}
 

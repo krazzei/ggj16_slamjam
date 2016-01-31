@@ -95,6 +95,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Movement)
 	void MoveLeft();
 
+	UFUNCTION(BlueprintCallable, Category = Movement)
+	void Jump();
+
+	UFUNCTION(BlueprintCallable, Category = Movement)
+	void Roll();
+
+	UFUNCTION(BlueprintCallable, Category = Movement)
+	void SideStep();
+
 	UFUNCTION(BlueprintCallable, Category = Pickups)
 	void Pickup(AItemPickup* ItemPickup);
 
