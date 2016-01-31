@@ -354,22 +354,6 @@ void Aggj16_slamjamCharacter::FinishedMove()
 	}
 }
 
-void Aggj16_slamjamCharacter::ReceiveHit
-(
-class UPrimitiveComponent * MyComp,
-	AActor * Other,
-class UPrimitiveComponent * OtherComp,
-	bool bSelfMoved,
-	FVector HitLocation,
-	FVector HitNormal,
-	FVector NormalImpulse,
-	const FHitResult & Hit
-	)
-{
-	SetMoveTarget(prevLocation);
-	bStopMoving = true;
-}
-
 void Aggj16_slamjamCharacter::NotifyHit
 (
 class UPrimitiveComponent * MyComp,
@@ -416,6 +400,18 @@ void Aggj16_slamjamCharacter::MoveLoop(float DeltaSeconds)
 	if (!bIsMoving)
 	{
 		return;
+	}
+
+	FHitResult HitInfo;//the thing that is an output of the statement
+
+	FCollisionQueryParams Line(FName("Collision param"));
+	Line.AddIgnoredActor(this);
+
+	bool hit = GetWorld()->LineTraceSingle(HitInfo, GetActorLocation(), moveTarget, ECC_PhysicsBody, Line);
+	
+	if (hit)
+	{
+		SetMoveTarget(prevLocation);
 	}
 
 	if (FVector::PointsAreNear(actorPos, moveTarget, 5))
