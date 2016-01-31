@@ -137,6 +137,30 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Movement)
 	void SideStepRight();
 
+	void ReceiveHit
+		(
+	class UPrimitiveComponent * MyComp,
+		AActor * Other,
+	class UPrimitiveComponent * OtherComp,
+		bool bSelfMoved,
+		FVector HitLocation,
+		FVector HitNormal,
+		FVector NormalImpulse,
+		const FHitResult & Hit
+		);
+
+	virtual void NotifyHit
+		(
+	class UPrimitiveComponent * MyComp,
+		AActor * Other,
+	class UPrimitiveComponent * OtherComp,
+		bool bSelfMoved,
+		FVector HitLocation,
+		FVector HitNormal,
+		FVector NormalImpulse,
+		const FHitResult & Hit
+		) override;
+
 	void FinishedMove();
 
 	void PerformNextMove();

@@ -120,7 +120,7 @@ void Aggj16_slamjamCharacter::BeginPlay()
 	//yPos = FMath::RoundToFloat(actorPos.Y / 50) * 100;
 
 	//SetActorLocation(FVector(xPos, yPos, 10.0f));
-
+	SetMoveTarget(GetActorLocation());
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -133,35 +133,29 @@ void Aggj16_slamjamCharacter::UpdateAnimation()
 
 	// Are we moving or standing still?
 	UPaperFlipbook* DesiredAnimation;
-	//if (MoveList.Num() <= 0)
-	//{
-	//	DesiredAnimation = IdleAnimation;
-	//}
-	//else
-	//{
 
-		switch (moveState)
-		{
-		case ECharMoveState::Idle:
-			DesiredAnimation = IdleAnimation;
-			break;
-		case ECharMoveState::MoveDown:
-		case ECharMoveState::MoveLeft:
-		case ECharMoveState::MoveRight:
-		case ECharMoveState::MoveUp:
-			DesiredAnimation = RunningAnimation;
-			break;
-		case ECharMoveState::Jump:
-			DesiredAnimation = JumpAnimation;
-			break;
-		case ECharMoveState::Roll:
-			DesiredAnimation = RollAnimation;
-			break;
-		default:
-			DesiredAnimation = IdleAnimation;
-			break;
-		}
-//	}
+	switch (moveState)
+	{
+	case ECharMoveState::Idle:
+		DesiredAnimation = IdleAnimation;
+		break;
+	case ECharMoveState::MoveDown:
+	case ECharMoveState::MoveLeft:
+	case ECharMoveState::MoveRight:
+	case ECharMoveState::MoveUp:
+		DesiredAnimation = RunningAnimation;
+		break;
+	case ECharMoveState::Jump:
+		DesiredAnimation = JumpAnimation;
+		break;
+	case ECharMoveState::Roll:
+		DesiredAnimation = RollAnimation;
+		break;
+	default:
+		DesiredAnimation = IdleAnimation;
+		break;
+	}
+
 
 	if( GetSprite()->GetFlipbook() != DesiredAnimation 	)
 	{
@@ -193,6 +187,7 @@ void Aggj16_slamjamCharacter::MoveRight()
 	// Apply the input to the character motion
 	if (bCanMove)
 	{
+		MoveList = MoveQueue.GetActions();
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveRight;
 		facingDirection = ECharMoveState::MoveRight;
@@ -208,6 +203,7 @@ void Aggj16_slamjamCharacter::MoveUp()
 {
 	if (bCanMove)
 	{
+		MoveList = MoveQueue.GetActions();
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveUp;
 		facingDirection = ECharMoveState::MoveUp;
@@ -223,6 +219,7 @@ void Aggj16_slamjamCharacter::MoveDown()
 {
 	if (bCanMove)
 	{
+		MoveList = MoveQueue.GetActions();
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveDown;
 		facingDirection = ECharMoveState::MoveDown;
@@ -238,6 +235,7 @@ void Aggj16_slamjamCharacter::MoveLeft()
 {
 	if (bCanMove)
 	{
+		MoveList = MoveQueue.GetActions();
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveLeft;
 		facingDirection = ECharMoveState::MoveLeft;
@@ -341,7 +339,7 @@ void Aggj16_slamjamCharacter::Pickup(AItemPickup* ItemPickup)
 void Aggj16_slamjamCharacter::FinishedMove()
 {
 	prevMoveState = moveState;
-	if (MoveIndex < MoveList.Num())
+	if (MoveIndex < MoveList.Num() && !bStopMoving)
 	{
 		moveState = MoveList[MoveIndex];
 		MoveIndex++;
@@ -355,6 +353,39 @@ void Aggj16_slamjamCharacter::FinishedMove()
 		bIsMoving = false;
 	}
 }
+
+void Aggj16_slamjamCharacter::ReceiveHit
+(
+class UPrimitiveComponent * MyComp,
+	AActor * Other,
+class UPrimitiveComponent * OtherComp,
+	bool bSelfMoved,
+	FVector HitLocation,
+	FVector HitNormal,
+	FVector NormalImpulse,
+	const FHitResult & Hit
+	)
+{
+	SetMoveTarget(prevLocation);
+	bStopMoving = true;
+}
+
+void Aggj16_slamjamCharacter::NotifyHit
+(
+class UPrimitiveComponent * MyComp,
+	AActor * Other,
+class UPrimitiveComponent * OtherComp,
+	bool bSelfMoved,
+	FVector HitLocation,
+	FVector HitNormal,
+	FVector NormalImpulse,
+	const FHitResult & Hit
+	)
+{
+	SetMoveTarget(prevLocation);
+	bStopMoving = true;
+}
+
 
 void Aggj16_slamjamCharacter::PerformNextMove()
 {
@@ -405,6 +436,8 @@ void Aggj16_slamjamCharacter::SetMoveTarget(FVector newLocation)
 	moveTarget = newLocation;
 }
 
+
+
 void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 {
 	// Update animation to match the motion
@@ -434,28 +467,6 @@ void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 		}
 
 		MoveLoop(DeltaSeconds);
-
-		/*if (FVector::PointsAreNear(actorPos, moveTarget, 0.01))
-		{
-			SetActorLocation(moveTarget);
-			bCanMove = true;
-			bStopMoving = true;
-			FinishedMove();
-		}
-		else if(!bStopMoving)
-		{
-			FVector newPos = FMath::Lerp(GetActorLocation(), moveTarget, DeltaSeconds * speed);
-			SetActorLocation(newPos);
-		}*/
-
-		/*if (TravelDirectionX < 0.0f)
-		{
-			Controller->SetControlRotation(FRotator(0.0f, 180.0f, 180.0f));
-		}
-		else if (TravelDirectionX > 0.0f)
-		{
-			Controller->SetControlRotation(FRotator(90.0f, 180.0f, 90.0f));
-		}*/
 	}
 }
 
