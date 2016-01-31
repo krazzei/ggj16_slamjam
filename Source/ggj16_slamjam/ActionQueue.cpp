@@ -22,9 +22,10 @@ void FActionQueue::Add(ECharMoveState Action)
 		MoveList.Remove(Last);
 	}
 	
+	// This is no longer reverse.
 	auto Reverse = TArray<ECharMoveState>();
 	
-	for (int32 i = MoveList.Num() - 1; i >= 0; --i)
+	for (int32 i = 0; i < MoveList.Num(); ++i)
 	{
 		Reverse.Add(MoveList[i]);
 	}
