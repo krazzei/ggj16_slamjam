@@ -4,6 +4,7 @@
 
 #include "PaperCharacter.h"
 #include "ItemPickup.h"
+#include "ActionQueue.h"
 #include "ggj16_slamjamCharacter.generated.h"
 
 // This class is the default character for ggj16_slamjam, and it is responsible for all
@@ -14,17 +15,6 @@
 //   The Sprite component (inherited from APaperCharacter) handles the visuals
 
 class UTextRenderComponent;
-
-UENUM(BlueprintType)
-enum class ECharMoveState : uint8
-{
-	Idle,
-	MoveRight,
-	MoveLeft,
-	MoveUp,
-	MoveDown,
-	Jump
-};
 
 UCLASS(config=Game)
 class Aggj16_slamjamCharacter : public APaperCharacter
@@ -43,6 +33,8 @@ class Aggj16_slamjamCharacter : public APaperCharacter
 	virtual void Tick(float DeltaSeconds) override;
 	
 protected:
+	uint8 KeyAmount = 0;
+	
 	// The animation to play while running around
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Animations)
 	class UPaperFlipbook* RunningAnimation;
@@ -83,6 +75,8 @@ public:
 	ECharMoveState facingDirection;
 
 	TArray<ECharMoveState> MoveList;
+	
+	FActionQueue MoveQueue;
 
 	int32 MoveIndex = 0;
 
@@ -98,7 +92,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Movement)
 	void MoveLeft();
 
-	UFUNCTION(BlueprintCallable, Category = Movement)
+	UFUNCTION(BlueprintCallable, Category = Pickups)
 	void Pickup(AItemPickup* ItemPickup);
 
+	UFUNCTION(BlueprintCallable, Category = Keys)
+	uint8 GetKeyAmount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = Keys)
+	bool ConsumeKey();
+	
+	UFUNCTION(BlueprintCallable, Category = Action)
+	TArray<uint8> GetActions();
 };

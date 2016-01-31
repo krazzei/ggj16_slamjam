@@ -228,10 +228,22 @@ void Aggj16_slamjamCharacter::Pickup(AItemPickup* ItemPickup)
 	switch (ItemPickup->ItemType)
 	{
 		case EItemType::Jump:
-			MoveList.Add(ECharMoveState::Jump);
-		break;
-	default:
-		break;
+			MoveQueue.Add(ECharMoveState::Jump);
+			break;
+		case EItemType::Roll:
+			MoveQueue.Add(ECharMoveState::Roll);
+			break;
+		case EItemType::SideStepLeft:
+			MoveQueue.Add(ECharMoveState::SideStepLeft);
+			break;
+		case EItemType::SideStepRight:
+			MoveQueue.Add(ECharMoveState::SideStepRight);
+			break;
+		case EItemType::Key:
+			KeyAmount++;
+			break;
+		default:
+			break;
 	}
 }
 
@@ -282,4 +294,34 @@ void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 			Controller->SetControlRotation(FRotator(90.0f, 180.0f, 90.0f));
 		}*/
 	}
+}
+
+uint8 Aggj16_slamjamCharacter::GetKeyAmount() const
+{
+	return KeyAmount;
+}
+
+bool Aggj16_slamjamCharacter::ConsumeKey()
+{
+	if (KeyAmount > 0)
+	{
+		KeyAmount--;
+		return true;
+	}
+	
+	return false;
+}
+
+TArray<uint8> Aggj16_slamjamCharacter::GetActions()
+{
+	TArray<uint8> Actions = TArray<uint8>();
+	
+	auto ActionList = MoveQueue.GetActions();
+	
+	for (auto i = 0; i < ActionList.Num(); ++i)
+	{
+		Actions.Add((uint8)ActionList[i]);
+	}
+	
+	return Actions;
 }

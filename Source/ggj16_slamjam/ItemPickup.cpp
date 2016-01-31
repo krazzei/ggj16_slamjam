@@ -1,28 +1,22 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ggj16_slamjam.h"
+#include "ggj16_slamjamCharacter.h"
 #include "ItemPickup.h"
-
 
 // Sets default values
 AItemPickup::AItemPickup()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
+	Trigger = CreateDefaultSubobject<UBoxComponent>(FName("Trigger"));
+	Trigger->OnComponentBeginOverlap.AddDynamic(this, &AItemPickup::BeginOverlap);
 }
 
-// Called when the game starts or when spawned
-void AItemPickup::BeginPlay()
+void AItemPickup::BeginOverlap(AActor *Other, class UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	Super::BeginPlay();
-	
+	auto Character = Cast<Aggj16_slamjamCharacter>(Other);
+	if (Character)
+	{
+		Character->Pickup(this);
+		Destroy();
+	}
 }
-
-// Called every frame
-void AItemPickup::Tick( float DeltaTime )
-{
-	Super::Tick( DeltaTime );
-
-}
-
