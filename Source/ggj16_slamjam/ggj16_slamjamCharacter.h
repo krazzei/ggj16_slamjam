@@ -62,6 +62,7 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
 	bool bCanMove;
+	bool bStopMoving;
 
 	virtual void BeginPlay() override;
 

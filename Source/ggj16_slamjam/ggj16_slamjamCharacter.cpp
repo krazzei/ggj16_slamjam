@@ -96,6 +96,7 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	bReplicates = true;
 
 	bCanMove = true;
+	bStopMoving = true;
 	moveState = ECharMoveState::Idle;
 	prevMoveState = ECharMoveState::Idle;
 
@@ -187,6 +188,7 @@ void Aggj16_slamjamCharacter::MoveRight()
 		moveState = ECharMoveState::MoveRight;
 		facingDirection = ECharMoveState::MoveRight;
 		moveTarget = GetActorLocation() + FVector(1.0, 0.0, 0.0) * 50;
+		bStopMoving = false;
 	}
 }
 
@@ -198,6 +200,7 @@ void Aggj16_slamjamCharacter::MoveUp()
 		moveState = ECharMoveState::MoveUp;
 		facingDirection = ECharMoveState::MoveUp;
 		moveTarget = GetActorLocation() + FVector(0.0, -1.0, 0.0) * 50;
+		bStopMoving = false;
 	}
 }
 
@@ -209,6 +212,7 @@ void Aggj16_slamjamCharacter::MoveDown()
 		moveState = ECharMoveState::MoveDown;
 		facingDirection = ECharMoveState::MoveDown;
 		moveTarget = GetActorLocation() + FVector(0.0, 1.0, 0.0) * 50;
+		bStopMoving = false;
 	}
 }
 
@@ -220,6 +224,7 @@ void Aggj16_slamjamCharacter::MoveLeft()
 		moveState = ECharMoveState::MoveLeft;
 		facingDirection = ECharMoveState::MoveLeft;
 		moveTarget = GetActorLocation() + FVector(-1.0, 0.0, 0.0) * 50;
+		bStopMoving = false;
 	}
 }
 
@@ -275,13 +280,16 @@ void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 			Controller->SetControlRotation(FRotator(0.0f, 180.0f, 0.0f));
 		}
 
-		if (FVector::PointsAreNear(actorPos, moveTarget, SMALL_NUMBER))
+		if (FVector::PointsAreNear(actorPos, moveTarget, 0.01) && !bStopMoving)
 		{
 			SetActorLocation(moveTarget);
+			bCanMove = true;
+			bStopMoving = true;
+			moveState = ECharMoveState::Idle;
 		}
-		else
+		else if(!bStopMoving)
 		{
-			FVector newPos = FMath::Lerp(GetActorLocation(), moveTarget, DeltaSeconds * 5);
+			FVector newPos = FMath::Lerp(GetActorLocation(), moveTarget, 0.15);
 			SetActorLocation(newPos);
 		}
 
