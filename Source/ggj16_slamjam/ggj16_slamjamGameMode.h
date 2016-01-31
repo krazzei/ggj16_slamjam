@@ -3,6 +3,7 @@
 #pragma once
 #include "GameFramework/GameMode.h"
 #include "ggj16_slamjamCharacter.h"
+#include "ggj16_slamjamPlayerController.h"
 #include "ggj16_slamjamGameMode.generated.h"
 
 // The GameMode defines the game being played. It governs the game rules, scoring, what actors
@@ -19,6 +20,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<Aggj16_slamjamCharacter> CharacterPawnClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<Aggj16_slamjamPlayerController> ThePlayerControllerClass;
 	
 	void ResetLevel();
 };

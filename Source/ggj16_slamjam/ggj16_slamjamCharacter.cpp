@@ -36,23 +36,24 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	IdleAnimation = ConstructorStatics.IdleAnimationAsset.Get();
 	GetSprite()->SetFlipbook(IdleAnimation);
 
-	// Use only Yaw from the controller and ignore the rest of the rotation.
-	bUseControllerRotationPitch = false;
+	// Use only Roll from the controller and ignore the rest of the rotation.
+	bUseControllerRotationPitch = true;
 	bUseControllerRotationYaw = true;
-	bUseControllerRotationRoll = false;
+	bUseControllerRotationRoll = true;
 
 	// Set the size of our collision capsule.
 	GetCapsuleComponent()->SetCapsuleHalfHeight(96.0f);
 	GetCapsuleComponent()->SetCapsuleRadius(40.0f);
+	GetCapsuleComponent()->SetLockedAxis(EDOFMode::XYPlane);
 
 	// Create a camera boom attached to the root (capsule)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->AttachTo(RootComponent);
 	CameraBoom->TargetArmLength = 500.0f;
-	CameraBoom->SocketOffset = FVector(0.0f, 0.0f, 75.0f);
+	CameraBoom->SocketOffset = FVector(0.0f, 0.0f, 0.0f);
 	CameraBoom->bAbsoluteRotation = true;
 	CameraBoom->bDoCollisionTest = false;
-	CameraBoom->RelativeRotation = FRotator(0.0f, -90.0f, 0.0f);
+	CameraBoom->RelativeRotation = FRotator(-90.0f, -90.0f, 0.0f);
 	
 
 	// Create an orthographic camera (no perspective) and attach it to the boom
@@ -75,9 +76,9 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 	GetCharacterMovement()->MaxFlySpeed = 600.0f;
 
-	// Lock character motion onto the XZ plane, so the character can't move in or out of the screen
+	// Lock character motion onto the XY plane, so the character can't move in or out of the screen
 	GetCharacterMovement()->bConstrainToPlane = true;
-	GetCharacterMovement()->SetPlaneConstraintNormal(FVector(0.0f, -1.0f, 0.0f));
+	GetCharacterMovement()->SetPlaneConstraintNormal(FVector(0.0f, 0.0f, 0.0f));
 
 	// Behave like a traditional 2D platformer character, with a flat bottom instead of a curved capsule bottom
 	// Note: This can cause a little floating when going up inclines; you can choose the tradeoff between better
@@ -97,6 +98,22 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	bCanMove = true;
 	moveState = ECharMoveState::Idle;
 	prevMoveState = ECharMoveState::Idle;
+
+}
+
+void Aggj16_slamjamCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FVector actorPos = GetActorLocation();
+	float xPos = actorPos.X;
+	float yPos = actorPos.Y;
+
+	xPos = FMath::RoundToFloat(actorPos.X / 50) * 100;
+	yPos = FMath::RoundToFloat(actorPos.Y / 50) * 100;
+
+	SetActorLocation(FVector(xPos, yPos, 10.0f));
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -110,14 +127,14 @@ void Aggj16_slamjamCharacter::UpdateAnimation()
 	// Are we moving or standing still?
 	UPaperFlipbook* DesiredAnimation = (PlayerSpeed > 0.0f) ? RunningAnimation : IdleAnimation;
 
-	if (MoveList.Num() <= 0)
-	{
-		DesiredAnimation = IdleAnimation;
-	}
-	else
-	{
+	//if (MoveList.Num() <= 0)
+	//{
+	//	DesiredAnimation = IdleAnimation;
+	//}
+	//else
+	//{
 
-		switch (MoveList[MoveIndex])
+		switch (moveState)
 		{
 		case ECharMoveState::Idle:
 			DesiredAnimation = IdleAnimation;
@@ -134,7 +151,7 @@ void Aggj16_slamjamCharacter::UpdateAnimation()
 		default:
 			break;
 		}
-	}
+//	}
 
 	if( GetSprite()->GetFlipbook() != DesiredAnimation 	)
 	{
@@ -155,25 +172,9 @@ void Aggj16_slamjamCharacter::Tick(float DeltaSeconds)
 
 void Aggj16_slamjamCharacter::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 {
-	// Note: the 'Jump' action and the 'MoveRight' axis are bound to actual keys/buttons/sticks in DefaultInput.ini (editable from Project Settings..Input)
-	//InputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	//InputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-	//InputComponent->BindAction("MoveRight", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveRight);
-	//InputComponent->BindAction("MoveUp", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveUp);
-	//InputComponent->BindAction("MoveDown", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveDown);
-	//InputComponent->BindAction("MoveLeft", IE_Pressed, this, &Aggj16_slamjamCharacter::MoveLeft);
-
-	//InputComponent->BindTouch(IE_Pressed, this, &Aggj16_slamjamCharacter::TouchStarted);
-	//InputComponent->BindTouch(IE_Released, this, &Aggj16_slamjamCharacter::TouchStopped);
+	APlayerController* pc = Cast<APlayerController>(GetController());
+	pc->bShowMouseCursor = true;
 }
-
-//void Aggj16_slamjamCharacter::MoveRight(float Value)
-//{
-//	if (bCanMove)
-//	{
-//		AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Value);
-//	}
-//}
 
 void Aggj16_slamjamCharacter::MoveRight()
 {
@@ -185,6 +186,7 @@ void Aggj16_slamjamCharacter::MoveRight()
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveRight;
 		facingDirection = ECharMoveState::MoveRight;
+		moveTarget = GetActorLocation() + FVector(1.0, 0.0, 0.0) * 50;
 	}
 }
 
@@ -195,6 +197,7 @@ void Aggj16_slamjamCharacter::MoveUp()
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveUp;
 		facingDirection = ECharMoveState::MoveUp;
+		moveTarget = GetActorLocation() + FVector(0.0, -1.0, 0.0) * 50;
 	}
 }
 
@@ -205,6 +208,7 @@ void Aggj16_slamjamCharacter::MoveDown()
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveDown;
 		facingDirection = ECharMoveState::MoveDown;
+		moveTarget = GetActorLocation() + FVector(0.0, 1.0, 0.0) * 50;
 	}
 }
 
@@ -215,6 +219,7 @@ void Aggj16_slamjamCharacter::MoveLeft()
 		prevMoveState = moveState;
 		moveState = ECharMoveState::MoveLeft;
 		facingDirection = ECharMoveState::MoveLeft;
+		moveTarget = GetActorLocation() + FVector(-1.0, 0.0, 0.0) * 50;
 	}
 }
 
@@ -240,22 +245,32 @@ void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 	{
 //		FVector FMath::Lerp(GetTransform().GetLocation(), GetTransform().GetLocation() + FVector(10.0f, 0.0f, 0.0f), )
 //		FRotator DesiredRotation;  // Controller->GetControlRotation();
-
+		FVector actorPos = GetActorLocation();
 		if (facingDirection == ECharMoveState::MoveDown)
 		{
-			Controller->SetControlRotation(FRotator(0.0f, 180.0f, 0.0f));
+			Controller->SetControlRotation(FRotator::MakeFromEuler(FVector(0.0f, 0.0f, 0.0f)));
 		}
 		else if (facingDirection == ECharMoveState::MoveLeft)
 		{
-			Controller->SetControlRotation(FRotator(0.0f, 0.0f, -90.0f));
+			Controller->SetControlRotation(FRotator(0.0f, 90.0f, 0.0f));
 		}
 		else if (facingDirection == ECharMoveState::MoveRight)
 		{
-			Controller->SetControlRotation(FRotator(0.0f, 0.0f, 90.0f));
+			Controller->SetControlRotation(FRotator(0.0f, -90.0f, 0.0f));
 		}
 		else if (facingDirection == ECharMoveState::MoveUp)
 		{
-			Controller->SetControlRotation(FRotator(0.0f, 0.0f, 0.0f));
+			Controller->SetControlRotation(FRotator(0.0f, 180.0f, 0.0f));
+		}
+
+		if (FVector::PointsAreNear(actorPos, moveTarget, SMALL_NUMBER))
+		{
+			SetActorLocation(moveTarget);
+		}
+		else
+		{
+			FVector newPos = FMath::Lerp(GetActorLocation(), moveTarget, DeltaSeconds * 5);
+			SetActorLocation(newPos);
 		}
 
 		/*if (TravelDirectionX < 0.0f)

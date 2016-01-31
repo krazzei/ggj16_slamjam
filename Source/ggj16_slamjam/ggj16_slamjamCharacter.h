@@ -71,6 +71,11 @@ public:
 
 	bool bCanMove;
 
+	virtual void BeginPlay() override;
+
+	FVector moveTarget;
+
+
 	ECharMoveState moveState;
 	ECharMoveState prevMoveState;
 

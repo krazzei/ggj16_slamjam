@@ -8,6 +8,7 @@ Aggj16_slamjamGameMode::Aggj16_slamjamGameMode()
 {
 	// set default pawn class to our character
 	DefaultPawnClass = CharacterPawnClass;
+	PlayerControllerClass = ThePlayerControllerClass;
 }
 
 void Aggj16_slamjamGameMode::ResetLevel()
