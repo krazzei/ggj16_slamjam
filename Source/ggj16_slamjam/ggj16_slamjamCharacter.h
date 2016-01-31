@@ -67,12 +67,18 @@ public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
+	bool bIsMoving;
 	bool bCanMove;
 	bool bStopMoving;
 
 	virtual void BeginPlay() override;
 
+	void MoveLoop(float DeltaSeconds);
+
+	void SetMoveTarget(FVector newLocation);
+
 	FVector moveTarget;
+	FVector prevLocation;
 
 	ECharMoveState moveState;
 	ECharMoveState prevMoveState;
