@@ -17,7 +17,7 @@ public:
 	
 	UBoxComponent* Trigger;
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	ECharMoveState WinState;
 	
 private:

@@ -16,7 +16,7 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	UBoxComponent* Trigger;
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	FName NextLevel;
 	
 private:
