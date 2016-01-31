@@ -103,7 +103,6 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	bStopMoving = true;
 	moveState = ECharMoveState::Idle;
 	prevMoveState = ECharMoveState::Idle;
-	moveDistance = 110;
 	MoveList.Add(ECharMoveState::Jump);
 	MoveList.Add(ECharMoveState::Roll);
 }
