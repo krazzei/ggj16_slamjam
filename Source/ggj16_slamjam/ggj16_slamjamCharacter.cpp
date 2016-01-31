@@ -397,12 +397,11 @@ void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 			Controller->SetControlRotation(FRotator(0.0f, 180.0f, 0.0f));
 		}
 
-		if (FVector::PointsAreNear(actorPos, moveTarget, 0.01) && !bStopMoving)
+		if (FVector::PointsAreNear(actorPos, moveTarget, 0.01))
 		{
 			SetActorLocation(moveTarget);
 			bCanMove = true;
 			bStopMoving = true;
-			moveState = ECharMoveState::Idle;
 			FinishedMove();
 		}
 		else if(!bStopMoving)
@@ -420,6 +419,11 @@ void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 			Controller->SetControlRotation(FRotator(90.0f, 180.0f, 90.0f));
 		}*/
 	}
+}
+
+ECharMoveState Aggj16_slamjamCharacter::GetMoveState()
+{
+	return moveState;
 }
 
 uint8 Aggj16_slamjamCharacter::GetKeyAmount() const

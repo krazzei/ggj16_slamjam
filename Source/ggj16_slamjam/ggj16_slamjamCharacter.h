@@ -74,9 +74,12 @@ public:
 
 	FVector moveTarget;
 
-
 	ECharMoveState moveState;
 	ECharMoveState prevMoveState;
+
+
+	UFUNCTION(BlueprintCallable, Category = Movement)
+	ECharMoveState GetMoveState();
 
 	UPROPERTY(EditAnywhere)
 	ECharMoveState facingDirection;
