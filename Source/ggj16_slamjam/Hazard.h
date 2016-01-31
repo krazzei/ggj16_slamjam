@@ -15,6 +15,7 @@ public:
 	// Sets default values for this actor's properties
 	AHazard();
 	
+	UPROPERTY(EditAnywhere)
 	UBoxComponent* Trigger;
 	
 	UPROPERTY(EditAnywhere)
@@ -23,4 +24,7 @@ public:
 private:
 	UFUNCTION()
 	void BeginOverlap(AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UFUNCTION()
+	void EndOverlap(AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };
