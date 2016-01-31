@@ -43,6 +43,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* IdleAnimation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+	class UPaperFlipbook* JumpAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+	class UPaperFlipbook* RollAnimation;
+
 	/** Called to choose the correct animation to play based on the character's movement state */
 	void UpdateAnimation();
 
@@ -75,6 +81,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	ECharMoveState facingDirection;
 
+	UPROPERTY(EditDefaultsOnly)
 	float moveDistance;
 
 	TArray<ECharMoveState> MoveList;
@@ -102,7 +109,16 @@ public:
 	void Roll();
 
 	UFUNCTION(BlueprintCallable, Category = Movement)
-	void SideStep();
+	void SideStepLeft();
+
+	UFUNCTION(BlueprintCallable, Category = Movement)
+	void SideStepRight();
+
+	void FinishedMove();
+
+	void PerformNextMove();
+
+	FVector GetMoveDirection();
 
 	UFUNCTION(BlueprintCallable, Category = Pickups)
 	void Pickup(AItemPickup* ItemPickup);

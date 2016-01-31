@@ -18,6 +18,8 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	{
 		ConstructorHelpers::FObjectFinderOptional<UPaperFlipbook> RunningAnimationAsset;
 		ConstructorHelpers::FObjectFinderOptional<UPaperFlipbook> IdleAnimationAsset;
+		ConstructorHelpers::FObjectFinderOptional<UPaperFlipbook> JumpAnimationAsset;
+		ConstructorHelpers::FObjectFinderOptional<UPaperFlipbook> RollAnimationAsset;
 		/*FConstructorStatics()
 			: RunningAnimationAsset(TEXT("/Game/2dSideScroller/Sprites/RunningAnimation.RunningAnimation"))
 			, IdleAnimationAsset(TEXT("/Game/2dSideScroller/Sprites/IdleAnimation.IdleAnimation"))
@@ -27,6 +29,8 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 		FConstructorStatics()
 			: RunningAnimationAsset(TEXT("/Game/Character/WalkingAnimation.WalkingAnimation"))
 			, IdleAnimationAsset(TEXT("/Game/Character/Idle.Idle"))
+			, JumpAnimationAsset(TEXT("/Game/Character/JumpAnimation.JumpAnimation"))
+			, RollAnimationAsset(TEXT("/Game/Character/RollAnimation.RollAnimation"))
 		{
 		}
 	};
@@ -100,7 +104,8 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	moveState = ECharMoveState::Idle;
 	prevMoveState = ECharMoveState::Idle;
 	moveDistance = 110;
-
+	MoveList.Add(ECharMoveState::Jump);
+	MoveList.Add(ECharMoveState::Roll);
 }
 
 void Aggj16_slamjamCharacter::BeginPlay()
@@ -127,8 +132,7 @@ void Aggj16_slamjamCharacter::UpdateAnimation()
 	const float PlayerSpeed = PlayerVelocity.Size();
 
 	// Are we moving or standing still?
-	UPaperFlipbook* DesiredAnimation = (PlayerSpeed > 0.0f) ? RunningAnimation : IdleAnimation;
-
+	UPaperFlipbook* DesiredAnimation;
 	//if (MoveList.Num() <= 0)
 	//{
 	//	DesiredAnimation = IdleAnimation;
@@ -148,9 +152,13 @@ void Aggj16_slamjamCharacter::UpdateAnimation()
 			DesiredAnimation = RunningAnimation;
 			break;
 		case ECharMoveState::Jump:
-
+			DesiredAnimation = JumpAnimation;
+			break;
+		case ECharMoveState::Roll:
+			DesiredAnimation = RollAnimation;
 			break;
 		default:
+			DesiredAnimation = IdleAnimation;
 			break;
 		}
 //	}
@@ -165,7 +173,7 @@ void Aggj16_slamjamCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	UpdateCharacter(DeltaSeconds);	
+	UpdateCharacter(DeltaSeconds);
 }
 
 
@@ -235,19 +243,60 @@ void Aggj16_slamjamCharacter::MoveLeft()
 
 void Aggj16_slamjamCharacter::Jump()
 {
-	
+	FVector moveDir = GetMoveDirection();
+	moveTarget = moveDir * moveDistance * 2;
 }
 
 void Aggj16_slamjamCharacter::Roll()
 {
-
+	FVector moveDir = GetMoveDirection();
+	moveTarget = moveDir * moveDistance * 2;
 }
 
-void Aggj16_slamjamCharacter::SideStep()
+void Aggj16_slamjamCharacter::SideStepLeft()
 {
-
+	FVector moveDir = GetMoveDirection();
+	moveTarget = moveDir * moveDistance * 2;
 }
 
+void Aggj16_slamjamCharacter::SideStepRight()
+{
+	FVector moveDir = GetMoveDirection();
+	moveTarget = moveDir * moveDistance * 2;
+}
+
+FVector Aggj16_slamjamCharacter::GetMoveDirection()
+{
+	FVector moveDirection;
+	switch (facingDirection)
+	{
+	case ECharMoveState::MoveDown:
+		moveDirection = FVector(0.0, 1.0, 0.0);
+		break;
+	case ECharMoveState::MoveUp:
+		moveDirection = FVector(0.0, -1.0, 0.0);
+		break;
+	case ECharMoveState::MoveRight:
+		moveDirection = FVector(1.0, 0.0, 0.0);
+		break;
+	case ECharMoveState::MoveLeft:
+		moveDirection = FVector(-1.0, 0.0, 0.0);
+		break;
+	case ECharMoveState::SideStepLeft:
+		moveDirection = GetActorUpVector() * -1;
+		break;
+	case ECharMoveState::SideStepRight:
+		moveDirection = GetActorUpVector();
+		break;
+	case ECharMoveState::Roll:
+		moveDirection = GetActorForwardVector();
+		break;
+	default:
+		moveDirection = FVector(0.0, 0.0, 0.0);
+		break;
+	}
+	return moveDirection;
+}
 
 
 void Aggj16_slamjamCharacter::Pickup(AItemPickup* ItemPickup)
@@ -271,6 +320,45 @@ void Aggj16_slamjamCharacter::Pickup(AItemPickup* ItemPickup)
 			break;
 		default:
 			break;
+	}
+}
+
+void Aggj16_slamjamCharacter::FinishedMove()
+{
+	prevMoveState = moveState;
+	if (MoveIndex < MoveList.Num())
+	{
+		moveState = MoveList[MoveIndex];
+		MoveIndex++;
+		PerformNextMove();
+	}
+	else {
+		MoveIndex = 0;
+		moveState = ECharMoveState::Idle;
+		bCanMove = true;
+		bStopMoving = true;
+	}
+}
+
+void Aggj16_slamjamCharacter::PerformNextMove()
+{
+	switch (moveState)
+	{
+	case ECharMoveState::Jump:
+		Jump();
+		break;
+	case ECharMoveState::SideStepLeft:
+		SideStepLeft();
+		break;
+	case ECharMoveState::SideStepRight:
+		SideStepRight();
+		break;
+	case ECharMoveState::Roll:
+		Roll();
+		break;
+	default:
+
+		break;
 	}
 }
 
@@ -308,6 +396,7 @@ void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 			bCanMove = true;
 			bStopMoving = true;
 			moveState = ECharMoveState::Idle;
+			FinishedMove();
 		}
 		else if(!bStopMoving)
 		{
