@@ -8,6 +8,7 @@
 ADoor::ADoor()
 {
 	Collider = CreateDefaultSubobject<UBoxComponent>(TEXT("Collider"));
+	
 	RootComponent = Collider;
 	
 	Trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Trigger"));
