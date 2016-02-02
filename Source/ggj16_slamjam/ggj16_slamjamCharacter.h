@@ -167,6 +167,8 @@ public:
 
 	FVector GetMoveDirection();
 
+	FVector GetFacingDirection();
+
 	UFUNCTION(BlueprintCallable, Category = Pickups)
 	void Pickup(AItemPickup* ItemPickup);
 

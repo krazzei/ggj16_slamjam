@@ -263,19 +263,55 @@ void Aggj16_slamjamCharacter::Roll()
 
 void Aggj16_slamjamCharacter::SideStepLeft()
 {
-	FVector moveDir = GetActorForwardVector();
+	FVector moveDir = GetMoveDirection();
 	SetMoveTarget(GetActorLocation() + moveDir * moveDistance);
 	speed = sidestepSpeed;
 }
 
 void Aggj16_slamjamCharacter::SideStepRight()
 {
-	FVector moveDir = GetActorForwardVector() * -1;
+	FVector moveDir = GetMoveDirection();
 	SetMoveTarget(GetActorLocation() + moveDir * moveDistance);
 	speed = sidestepSpeed;
 }
 
 FVector Aggj16_slamjamCharacter::GetMoveDirection()
+{
+	FVector moveDirection;
+	switch (moveState)
+	{
+	case ECharMoveState::MoveDown:
+		moveDirection = FVector(0.0, 1.0, 0.0);
+		break;
+	case ECharMoveState::MoveUp:
+		moveDirection = FVector(0.0, -1.0, 0.0);
+		break;
+	case ECharMoveState::MoveRight:
+		moveDirection = FVector(1.0, 0.0, 0.0);
+		break;
+	case ECharMoveState::MoveLeft:
+		moveDirection = FVector(-1.0, 0.0, 0.0);
+		break;
+	case ECharMoveState::SideStepLeft:
+		moveDirection = GetActorForwardVector();
+		break;
+	case ECharMoveState::SideStepRight:
+		moveDirection = GetActorForwardVector() * -1;
+		break;
+	case ECharMoveState::Roll:
+		moveDirection = GetActorRightVector();
+		break;
+	case ECharMoveState::Jump:
+		moveDirection = GetActorRightVector();
+		break;
+	default:
+		moveDirection = FVector(0.0, 0.0, 0.0);
+		break;
+	}
+	return moveDirection;
+}
+
+FVector Aggj16_slamjamCharacter::GetFacingDirection()
 {
 	FVector moveDirection;
 	switch (facingDirection)
@@ -291,18 +327,6 @@ FVector Aggj16_slamjamCharacter::GetMoveDirection()
 		break;
 	case ECharMoveState::MoveLeft:
 		moveDirection = FVector(-1.0, 0.0, 0.0);
-		break;
-	case ECharMoveState::SideStepLeft:
-		moveDirection = GetActorRightVector() * -1;
-		break;
-	case ECharMoveState::SideStepRight:
-		moveDirection = GetActorRightVector();
-		break;
-	case ECharMoveState::Roll:
-		moveDirection = GetActorForwardVector();
-		break;
-	case ECharMoveState::Jump:
-		moveDirection = GetActorForwardVector();
 		break;
 	default:
 		moveDirection = FVector(0.0, 0.0, 0.0);
@@ -368,6 +392,7 @@ class UPrimitiveComponent * OtherComp,
 {
 	SetMoveTarget(prevLocation);
 	bStopMoving = true;
+	MoveIndex = MoveList.Num();
 }
 
 
@@ -404,14 +429,15 @@ void Aggj16_slamjamCharacter::MoveLoop(float DeltaSeconds)
 
 	FHitResult HitInfo;//the thing that is an output of the statement
 
-	FCollisionQueryParams Line(FName("Collision param"));
+	FCollisionQueryParams Line(FName("Collision param"), true);
 	Line.AddIgnoredActor(this);
 
-	bool hit = GetWorld()->LineTraceSingle(HitInfo, GetActorLocation(), moveTarget, ECC_PhysicsBody, Line);
+	bool hit = GetWorld()->LineTraceSingle(HitInfo, GetActorLocation(), GetActorLocation() + GetMoveDirection() * 20, ECC_PhysicsBody, Line);
 	
 	if (hit)
 	{
 		SetMoveTarget(prevLocation);
+		MoveIndex = MoveList.Num();
 	}
 
 	if (FVector::PointsAreNear(actorPos, moveTarget, 5))
@@ -421,7 +447,7 @@ void Aggj16_slamjamCharacter::MoveLoop(float DeltaSeconds)
 	}
 	else
 	{
-		FVector newPos = FMath::Lerp(GetActorLocation(), moveTarget, DeltaSeconds * speed);
+		FVector newPos = FMath::Lerp(actorPos, moveTarget, DeltaSeconds * speed);
 		SetActorLocation(newPos);
 	}
 }
