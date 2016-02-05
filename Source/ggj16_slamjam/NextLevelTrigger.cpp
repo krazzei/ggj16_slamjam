@@ -16,6 +16,11 @@ void ANextLevelTrigger::BeginOverlap(AActor *Other, class UPrimitiveComponent *O
 	auto Character = Cast<Aggj16_slamjamCharacter>(Other);
 	if (Character)
 	{
-		UGameplayStatics::OpenLevel(GetWorld(), NextLevel);
+		auto PC = Cast<APlayerController>(Character->GetController());
+		if (PC)
+		{
+			// TODO: just have the NextLevel string contain all this.
+			PC->ClientTravel("/Game/Maps/" + NextLevel.ToString() + ".umap", ETravelType::TRAVEL_Absolute);
+		}
 	}
 }
