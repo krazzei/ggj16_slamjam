@@ -31,6 +31,11 @@ class Aggj16_slamjamCharacter : public APaperCharacter
 
 	UTextRenderComponent* TextComponent;
 	virtual void Tick(float DeltaSeconds) override;
+
+	/** Returns if this actor will hit a wall for the given distance */
+	bool WillHitWall(float Distance);
+
+	void SetMove(FVector Direction, ECharMoveState MoveState);
 	
 protected:
 	uint8 KeyAmount = 0;
@@ -48,6 +53,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* RollAnimation;
+
+	class UPaperFlipbook* SideStepAnimation;
 
 	/** Called to choose the correct animation to play based on the character's movement state */
 	void UpdateAnimation();
@@ -82,7 +89,6 @@ public:
 
 	ECharMoveState moveState;
 	ECharMoveState prevMoveState;
-
 
 	UFUNCTION(BlueprintCallable, Category = Movement)
 	ECharMoveState GetMoveState();
@@ -136,18 +142,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = Movement)
 	void SideStepRight();
-
-	void ReceiveHit
-		(
-	class UPrimitiveComponent * MyComp,
-		AActor * Other,
-	class UPrimitiveComponent * OtherComp,
-		bool bSelfMoved,
-		FVector HitLocation,
-		FVector HitNormal,
-		FVector NormalImpulse,
-		const FHitResult & Hit
-		);
 
 	virtual void NotifyHit
 		(

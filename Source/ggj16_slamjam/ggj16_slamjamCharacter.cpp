@@ -4,8 +4,7 @@
 #include "ggj16_slamjamCharacter.h"
 #include "PaperFlipbookComponent.h"
 #include "Components/TextRenderComponent.h"
-
-
+#include "DrawDebugHelpers.h"
 
 DEFINE_LOG_CATEGORY_STATIC(SideScrollerCharacter, Log, All);
 //////////////////////////////////////////////////////////////////////////
@@ -20,6 +19,7 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 		ConstructorHelpers::FObjectFinderOptional<UPaperFlipbook> IdleAnimationAsset;
 		ConstructorHelpers::FObjectFinderOptional<UPaperFlipbook> JumpAnimationAsset;
 		ConstructorHelpers::FObjectFinderOptional<UPaperFlipbook> RollAnimationAsset;
+		ConstructorHelpers::FObjectFinderOptional<UPaperFlipbook> SideAnimationAsset;
 		/*FConstructorStatics()
 			: RunningAnimationAsset(TEXT("/Game/2dSideScroller/Sprites/RunningAnimation.RunningAnimation"))
 			, IdleAnimationAsset(TEXT("/Game/2dSideScroller/Sprites/IdleAnimation.IdleAnimation"))
@@ -31,11 +31,13 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 			, IdleAnimationAsset(TEXT("/Game/Character/Idle.Idle"))
 			, JumpAnimationAsset(TEXT("/Game/Character/JumpAnimation.JumpAnimation"))
 			, RollAnimationAsset(TEXT("/Game/Character/RollAnimation.RollAnimation"))
+			, SideAnimationAsset(TEXT("/Game/Character/SideStepAnimation.SideStepAnimation"))
 		{
 		}
 	};
 	static FConstructorStatics ConstructorStatics;
 
+	SideStepAnimation = ConstructorStatics.SideAnimationAsset.Get();
 	RunningAnimation = ConstructorStatics.RunningAnimationAsset.Get();
 	IdleAnimation = ConstructorStatics.IdleAnimationAsset.Get();
 	GetSprite()->SetFlipbook(IdleAnimation);
@@ -48,7 +50,7 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	// Set the size of our collision capsule.
 	GetCapsuleComponent()->SetCapsuleHalfHeight(96.0f);
 	GetCapsuleComponent()->SetCapsuleRadius(40.0f);
-	GetCapsuleComponent()->SetLockedAxis(EDOFMode::XYPlane);
+	GetCapsuleComponent()->SetConstraintMode(EDOFMode::XZPlane);
 
 	// Create a camera boom attached to the root (capsule)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -59,7 +61,6 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	CameraBoom->bDoCollisionTest = false;
 	CameraBoom->RelativeRotation = FRotator(-90.0f, -90.0f, 0.0f);
 	
-
 	// Create an orthographic camera (no perspective) and attach it to the boom
 	SideViewCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("SideViewCamera"));
 	SideViewCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
@@ -88,38 +89,21 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 	// Note: This can cause a little floating when going up inclines; you can choose the tradeoff between better
 	// behavior on the edge of a ledge versus inclines by setting this to true or false
 	GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
-
-// 	TextComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("IncarGear"));
-// 	TextComponent->SetRelativeScale3D(FVector(3.0f, 3.0f, 3.0f));
-// 	TextComponent->SetRelativeLocation(FVector(35.0f, 5.0f, 20.0f));
-// 	TextComponent->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
-// 	TextComponent->AttachTo(RootComponent);
-
-	// Enable replication on the Sprite component so animations show up when networked
-	GetSprite()->SetIsReplicated(true);
-	bReplicates = true;
+	
+	GetSprite()->SetIsReplicated(false);
+	bReplicates = false;
 
 	bIsMoving = false;
 	bCanMove = true;
 	bStopMoving = true;
 	moveState = ECharMoveState::Idle;
 	prevMoveState = ECharMoveState::Idle;
-	//MoveList.Add(ECharMoveState::Jump);
-	//MoveList.Add(ECharMoveState::Roll);
 }
 
 void Aggj16_slamjamCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//FVector actorPos = GetActorLocation();
-	//float xPos = actorPos.X;
-	//float yPos = actorPos.Y;
-
-	//xPos = FMath::RoundToFloat(actorPos.X / 50) * 100;
-	//yPos = FMath::RoundToFloat(actorPos.Y / 50) * 100;
-
-	//SetActorLocation(FVector(xPos, yPos, 10.0f));
 	SetMoveTarget(GetActorLocation());
 }
 
@@ -151,11 +135,14 @@ void Aggj16_slamjamCharacter::UpdateAnimation()
 	case ECharMoveState::Roll:
 		DesiredAnimation = RollAnimation;
 		break;
+	case ECharMoveState::SideStepLeft:
+	case ECharMoveState::SideStepRight:
+		DesiredAnimation = SideStepAnimation;
+		break;
 	default:
 		DesiredAnimation = IdleAnimation;
 		break;
 	}
-
 
 	if( GetSprite()->GetFlipbook() != DesiredAnimation 	)
 	{
@@ -170,7 +157,6 @@ void Aggj16_slamjamCharacter::Tick(float DeltaSeconds)
 	UpdateCharacter(DeltaSeconds);
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -180,98 +166,122 @@ void Aggj16_slamjamCharacter::SetupPlayerInputComponent(class UInputComponent* I
 	pc->bShowMouseCursor = true;
 }
 
-void Aggj16_slamjamCharacter::MoveRight()
+void Aggj16_slamjamCharacter::SetMove(FVector Direction, ECharMoveState MoveState)
 {
-	/*UpdateChar();*/
-
-	// Apply the input to the character motion
 	if (bCanMove)
 	{
-		MoveList = MoveQueue.GetActions();
 		prevMoveState = moveState;
-		moveState = ECharMoveState::MoveRight;
-		facingDirection = ECharMoveState::MoveRight;
-		SetMoveTarget(GetActorLocation() + FVector(1.0, 0.0, 0.0) * moveDistance);
-		bStopMoving = false;
-		bCanMove = false;
-		speed = moveSpeed;
-		bIsMoving = true;
+		moveState = MoveState;
+		facingDirection = MoveState;
+
+		if (!WillHitWall(moveDistance))
+		{
+			MoveList = MoveQueue.GetActions();
+			SetMoveTarget(GetActorLocation() + Direction * moveDistance);
+			bStopMoving = false;
+			bCanMove = false;
+			speed = moveSpeed;
+			bIsMoving = true;
+		}
+		else
+		{
+			prevMoveState = MoveState;
+			moveState = ECharMoveState::Idle;
+		}
 	}
+}
+
+void Aggj16_slamjamCharacter::MoveRight()
+{
+	SetMove(FVector(1.0, 0.0, 0.0), ECharMoveState::MoveRight);
 }
 
 void Aggj16_slamjamCharacter::MoveUp()
 {
-	if (bCanMove)
-	{
-		MoveList = MoveQueue.GetActions();
-		prevMoveState = moveState;
-		moveState = ECharMoveState::MoveUp;
-		facingDirection = ECharMoveState::MoveUp;
-		SetMoveTarget(GetActorLocation() + FVector(0.0, -1.0, 0.0) * moveDistance);
-		bStopMoving = false;
-		bCanMove = false;
-		speed = moveSpeed;
-		bIsMoving = true;
-	}
+	SetMove(FVector(0.0, -1.0, 0.0), ECharMoveState::MoveUp);
 }
 
 void Aggj16_slamjamCharacter::MoveDown()
 {
-	if (bCanMove)
-	{
-		MoveList = MoveQueue.GetActions();
-		prevMoveState = moveState;
-		moveState = ECharMoveState::MoveDown;
-		facingDirection = ECharMoveState::MoveDown;
-		SetMoveTarget(GetActorLocation() + FVector(0.0, 1.0, 0.0) * moveDistance);
-		bStopMoving = false;
-		bCanMove = false;
-		speed = moveSpeed;
-		bIsMoving = true;
-	}
+	SetMove(FVector(0.0, 1.0, 0.0), ECharMoveState::MoveDown);
 }
 
 void Aggj16_slamjamCharacter::MoveLeft()
 {
-	if (bCanMove)
-	{
-		MoveList = MoveQueue.GetActions();
-		prevMoveState = moveState;
-		moveState = ECharMoveState::MoveLeft;
-		facingDirection = ECharMoveState::MoveLeft;
-		SetMoveTarget(GetActorLocation() + FVector(-1.0, 0.0, 0.0) * moveDistance);
-		bStopMoving = false;
-		bCanMove = false;
-		speed = moveSpeed;
-		bIsMoving = true;
-	}
+	SetMove(FVector(-1.0, 0.0, 0.0), ECharMoveState::MoveLeft);
 }
 
 void Aggj16_slamjamCharacter::Jump()
 {
 	FVector moveDir = GetMoveDirection();
-	SetMoveTarget(GetActorLocation() + moveDir * moveDistance * 2);
+	if (WillHitWall(moveDistance * 2))
+	{
+		if (WillHitWall(moveDistance))
+		{
+			MoveIndex = MoveList.Num();
+			bStopMoving = false;
+		}
+		else
+		{
+			SetMoveTarget(GetActorLocation() + moveDir * moveDistance);
+		}
+	}
+	else
+	{
+		SetMoveTarget(GetActorLocation() + moveDir * moveDistance * 2);
+	}
 	speed = jumpSpeed;
 }
 
 void Aggj16_slamjamCharacter::Roll()
 {
 	FVector moveDir = GetMoveDirection();
-	SetMoveTarget(GetActorLocation() + moveDir * moveDistance * 2);
+	if (WillHitWall(moveDistance * 2))
+	{
+		if (WillHitWall(moveDistance))
+		{
+			MoveIndex = MoveList.Num();
+			bStopMoving = false;
+		}
+		else
+		{
+			SetMoveTarget(GetActorLocation() + moveDir * moveDistance);
+		}
+	}
+	else
+	{
+		SetMoveTarget(GetActorLocation() + moveDir * moveDistance * 2);
+	}
 	speed = rollSpeed;
 }
 
 void Aggj16_slamjamCharacter::SideStepLeft()
 {
 	FVector moveDir = GetMoveDirection();
-	SetMoveTarget(GetActorLocation() + moveDir * moveDistance);
+	if (WillHitWall(moveDistance))
+	{
+		MoveIndex = MoveList.Num();
+		bStopMoving = false;
+	}
+	else
+	{
+		SetMoveTarget(GetActorLocation() + moveDir * moveDistance);
+	}
 	speed = sidestepSpeed;
 }
 
 void Aggj16_slamjamCharacter::SideStepRight()
 {
 	FVector moveDir = GetMoveDirection();
-	SetMoveTarget(GetActorLocation() + moveDir * moveDistance);
+	if (WillHitWall(moveDistance))
+	{
+		MoveIndex = MoveList.Num();
+		bStopMoving = false;
+	}
+	else
+	{
+		SetMoveTarget(GetActorLocation() + moveDir * moveDistance);
+	}
 	speed = sidestepSpeed;
 }
 
@@ -335,7 +345,6 @@ FVector Aggj16_slamjamCharacter::GetFacingDirection()
 	return moveDirection;
 }
 
-
 void Aggj16_slamjamCharacter::Pickup(AItemPickup* ItemPickup)
 {
 	switch (ItemPickup->ItemType)
@@ -369,7 +378,8 @@ void Aggj16_slamjamCharacter::FinishedMove()
 		MoveIndex++;
 		PerformNextMove();
 	}
-	else {
+	else 
+	{
 		MoveIndex = 0;
 		moveState = ECharMoveState::Idle;
 		bCanMove = true;
@@ -390,11 +400,11 @@ class UPrimitiveComponent * OtherComp,
 	const FHitResult & Hit
 	)
 {
+	GLog->Log("WE shouldn't see this, unless its an interactible");
 	SetMoveTarget(prevLocation);
 	bStopMoving = true;
 	MoveIndex = MoveList.Num();
 }
-
 
 void Aggj16_slamjamCharacter::PerformNextMove()
 {
@@ -420,34 +430,36 @@ void Aggj16_slamjamCharacter::PerformNextMove()
 
 void Aggj16_slamjamCharacter::MoveLoop(float DeltaSeconds)
 {
-	FVector actorPos = GetActorLocation();
-
 	if (!bIsMoving)
 	{
 		return;
 	}
 
-	FHitResult HitInfo;//the thing that is an output of the statement
+	FVector ActorPos = GetActorLocation();
 
-	FCollisionQueryParams Line(FName("Collision param"), true);
-	Line.AddIgnoredActor(this);
+	//FHitResult HitInfo;//the thing that is an output of the statement
 
-	bool hit = GetWorld()->LineTraceSingle(HitInfo, GetActorLocation(), GetActorLocation() + GetMoveDirection() * 20, ECC_PhysicsBody, Line);
-	
-	if (hit)
-	{
-		SetMoveTarget(prevLocation);
-		MoveIndex = MoveList.Num();
-	}
+	//FCollisionQueryParams Line(FName("Collision param"), true);
+	//Line.AddIgnoredActor(this);
 
-	if (FVector::PointsAreNear(actorPos, moveTarget, 5))
+	////bool DidHit = GetWorld()->LineTraceSingle(HitInfo, GetActorLocation(), GetActorLocation() + GetMoveDirection() * 100, ECC_PhysicsBody, Line);
+	//bool DidHit = GetWorld()->LineTraceSingleByChannel(HitInfo, GetActorLocation(), GetActorLocation() + GetMoveDirection() * 100, ECC_PhysicsBody, Line);
+	//DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + GetMoveDirection() * 100, FColor::Red, false, 1.0f);
+	//
+	//if (DidHit)
+	//{
+	//	SetMoveTarget(prevLocation);
+	//	MoveIndex = MoveList.Num();
+	//}
+
+	if (FVector::PointsAreNear(ActorPos, moveTarget, 5))
 	{
 		SetActorLocation(moveTarget);
 		FinishedMove();
 	}
 	else
 	{
-		FVector newPos = FMath::Lerp(actorPos, moveTarget, DeltaSeconds * speed);
+		FVector newPos = FMath::Lerp(ActorPos, moveTarget, DeltaSeconds * speed);
 		SetActorLocation(newPos);
 	}
 }
@@ -458,8 +470,6 @@ void Aggj16_slamjamCharacter::SetMoveTarget(FVector newLocation)
 	moveTarget = newLocation;
 }
 
-
-
 void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 {
 	// Update animation to match the motion
@@ -468,8 +478,6 @@ void Aggj16_slamjamCharacter::UpdateCharacter(float DeltaSeconds)
 	// Set the rotation so that the character faces his direction of travel.
 	if (Controller != nullptr)
 	{
-//		FVector FMath::Lerp(GetTransform().GetLocation(), GetTransform().GetLocation() + FVector(10.0f, 0.0f, 0.0f), )
-//		FRotator DesiredRotation;  // Controller->GetControlRotation();
 		FVector actorPos = GetActorLocation();
 		if (facingDirection == ECharMoveState::MoveDown)
 		{
@@ -525,4 +533,17 @@ TArray<uint8> Aggj16_slamjamCharacter::GetActions()
 	}
 	
 	return Actions;
+}
+
+bool Aggj16_slamjamCharacter::WillHitWall(float Distance)
+{
+	FVector ActorPos = GetActorLocation();
+
+	FHitResult HitInfo;
+
+	FCollisionQueryParams Line(FName("Collision param"), true);
+	Line.AddIgnoredActor(this);
+
+	DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + GetMoveDirection() * Distance, FColor::Red, false, 1.0f);
+	return GetWorld()->LineTraceSingleByChannel(HitInfo, GetActorLocation(), GetActorLocation() + GetMoveDirection() * Distance, ECC_PhysicsBody, Line);
 }
