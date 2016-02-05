@@ -13,14 +13,5 @@ ANextLevelTrigger::ANextLevelTrigger()
 
 void ANextLevelTrigger::BeginOverlap(AActor *Other, class UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	auto Character = Cast<Aggj16_slamjamCharacter>(Other);
-	if (Character)
-	{
-		auto PC = Cast<APlayerController>(Character->GetController());
-		if (PC)
-		{
-			// TODO: just have the NextLevel string contain all this.
-			PC->ClientTravel("/Game/Maps/" + NextLevel.ToString() + ".umap", ETravelType::TRAVEL_Absolute);
-		}
-	}
+	GetWorld()->ServerTravel("/Game/Maps/" + NextLevel.ToString());
 }

@@ -544,6 +544,5 @@ bool Aggj16_slamjamCharacter::WillHitWall(float Distance)
 	FCollisionQueryParams Line(FName("Collision param"), true);
 	Line.AddIgnoredActor(this);
 
-	DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + GetMoveDirection() * Distance, FColor::Red, false, 1.0f);
 	return GetWorld()->LineTraceSingleByChannel(HitInfo, GetActorLocation(), GetActorLocation() + GetMoveDirection() * Distance, ECC_PhysicsBody, Line);
 }
