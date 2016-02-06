@@ -176,6 +176,7 @@ void Aggj16_slamjamCharacter::SetMove(FVector Direction, ECharMoveState MoveStat
 
 		if (!WillHitWall(moveDistance))
 		{
+			ActorStartMovePosition = GetActorLocation();
 			MoveList = MoveQueue.GetActions();
 			SetMoveTarget(GetActorLocation() + Direction * moveDistance);
 			bStopMoving = false;
@@ -219,7 +220,7 @@ void Aggj16_slamjamCharacter::Jump()
 		if (WillHitWall(moveDistance))
 		{
 			MoveIndex = MoveList.Num();
-			bStopMoving = false;
+			FinishedMove();
 		}
 		else
 		{
@@ -241,7 +242,7 @@ void Aggj16_slamjamCharacter::Roll()
 		if (WillHitWall(moveDistance))
 		{
 			MoveIndex = MoveList.Num();
-			bStopMoving = false;
+			FinishedMove();
 		}
 		else
 		{
@@ -261,7 +262,7 @@ void Aggj16_slamjamCharacter::SideStepLeft()
 	if (WillHitWall(moveDistance))
 	{
 		MoveIndex = MoveList.Num();
-		bStopMoving = false;
+		FinishedMove();
 	}
 	else
 	{
@@ -276,7 +277,7 @@ void Aggj16_slamjamCharacter::SideStepRight()
 	if (WillHitWall(moveDistance))
 	{
 		MoveIndex = MoveList.Num();
-		bStopMoving = false;
+		FinishedMove();
 	}
 	else
 	{
@@ -408,6 +409,8 @@ class UPrimitiveComponent * OtherComp,
 
 void Aggj16_slamjamCharacter::PerformNextMove()
 {
+	ActorStartMovePosition = GetActorLocation();
+
 	switch (moveState)
 	{
 	case ECharMoveState::Jump:
@@ -435,32 +438,15 @@ void Aggj16_slamjamCharacter::MoveLoop(float DeltaSeconds)
 		return;
 	}
 
-	FVector ActorPos = GetActorLocation();
+	FVector NewPos = FMath::Lerp(ActorStartMovePosition, moveTarget, (CurrentLerpTime / speed));
+	CurrentLerpTime += DeltaSeconds;
+	SetActorLocation(NewPos);
 
-	//FHitResult HitInfo;//the thing that is an output of the statement
-
-	//FCollisionQueryParams Line(FName("Collision param"), true);
-	//Line.AddIgnoredActor(this);
-
-	////bool DidHit = GetWorld()->LineTraceSingle(HitInfo, GetActorLocation(), GetActorLocation() + GetMoveDirection() * 100, ECC_PhysicsBody, Line);
-	//bool DidHit = GetWorld()->LineTraceSingleByChannel(HitInfo, GetActorLocation(), GetActorLocation() + GetMoveDirection() * 100, ECC_PhysicsBody, Line);
-	//DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + GetMoveDirection() * 100, FColor::Red, false, 1.0f);
-	//
-	//if (DidHit)
-	//{
-	//	SetMoveTarget(prevLocation);
-	//	MoveIndex = MoveList.Num();
-	//}
-
-	if (FVector::PointsAreNear(ActorPos, moveTarget, 5))
+	if (CurrentLerpTime >= speed)
 	{
 		SetActorLocation(moveTarget);
 		FinishedMove();
-	}
-	else
-	{
-		FVector newPos = FMath::Lerp(ActorPos, moveTarget, DeltaSeconds * speed);
-		SetActorLocation(newPos);
+		CurrentLerpTime = 0;
 	}
 }
 

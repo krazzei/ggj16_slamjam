@@ -39,6 +39,10 @@ class Aggj16_slamjamCharacter : public APaperCharacter
 	
 protected:
 	uint8 KeyAmount = 0;
+
+	float CurrentLerpTime;
+	/** The position the actor was in at the start of the current ECharMoveState */
+	FVector ActorStartMovePosition;
 	
 	// The animation to play while running around
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Animations)
@@ -98,18 +102,23 @@ public:
 
 	float speed;
 
+	/** How far one square is */
 	UPROPERTY(EditDefaultsOnly, Category = Movement)
 	float moveDistance;
 
+	/** The time in seconds to complete the move action */
 	UPROPERTY(EditDefaultsOnly, Category = Movement)
 	float moveSpeed;
 
+	/** The time in seconds to complete the jump action */
 	UPROPERTY(EditDefaultsOnly, Category = Movement)
 	float jumpSpeed;
 
+	/** The time in seconds to complete the side step action */
 	UPROPERTY(EditDefaultsOnly, Category = Movement)
 	float sidestepSpeed;
 
+	/** The time in seconds to complete the roll action */
 	UPROPERTY(EditDefaultsOnly, Category = Movement)
 	float rollSpeed;
 
