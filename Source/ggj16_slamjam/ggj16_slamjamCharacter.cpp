@@ -30,7 +30,7 @@ Aggj16_slamjamCharacter::Aggj16_slamjamCharacter()
 			: RunningAnimationAsset(TEXT("/Game/Character/WalkingAnimation.WalkingAnimation"))
 			, IdleAnimationAsset(TEXT("/Game/Character/Idle.Idle"))
 			, JumpAnimationAsset(TEXT("/Game/Character/JumpAnimation.JumpAnimation"))
-			, RollAnimationAsset(TEXT("/Game/Character/RollAnimation.RollAnimation"))
+			, RollAnimationAsset(TEXT("/Game/Character/RollAnimationNew.RollAnimationNew"))
 			, SideAnimationAsset(TEXT("/Game/Character/SideStepAnimation.SideStepAnimation"))
 		{
 		}
