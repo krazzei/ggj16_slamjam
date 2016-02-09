@@ -22,9 +22,16 @@ public:
 	ECharMoveState WinState;
 	
 private:
+
+	class Aggj16_slamjamCharacter* Character;
+	FName CurrentLevel;
+
 	UFUNCTION()
 	void BeginOverlap(AActor* Other, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 	UFUNCTION()
 	void EndOverlap(AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	virtual void Tick(float DeltaSeconds) override;
+	virtual void BeginPlay() override;
 };

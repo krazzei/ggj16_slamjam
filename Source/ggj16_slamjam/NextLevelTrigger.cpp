@@ -13,5 +13,5 @@ ANextLevelTrigger::ANextLevelTrigger()
 
 void ANextLevelTrigger::BeginOverlap(AActor *Other, class UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	GetWorld()->ServerTravel("/Game/Maps/" + NextLevel.ToString());
+	UGameplayStatics::OpenLevel(GetWorld(), FName(*("/Game/Maps/" + NextLevel.ToString())));
 }
